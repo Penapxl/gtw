@@ -1,0 +1,209 @@
+Berikut adalah rangkuman lengkap langkah demi langkah dari seluruh percakapan kita, yang disusun menjadi **Panduan Teknis**. Kamu bisa menyalin teks ini untuk dokumentasi atau untuk mengulang prosesnya di server baru.
+
+-----
+
+# PANDUAN LENGKAP MEMBUAT WHATSAPP GATEWAY SERVER
+
+**(Node.js + Express + Multi-Device + Ngrok + PM2)**
+
+### **1. Persiapan Awal (Wajib)**
+
+Pastikan di komputer server (`Local Disk C:`) sudah terinstall:
+
+  * **Node.js** (Versi LTS).
+  * **Git** (Opsional).
+  * **Aplikasi Ngrok** (File `ngrok.exe`).
+  * **Google Chrome** (Browser).
+
+-----
+
+### **2. Instalasi Proyek**
+
+1.  Buat folder baru di Drive C dengan nama **`server-wa`**.
+2.  Buka **CMD** (Command Prompt).
+3.  Masuk ke folder tersebut:
+    ```bash
+    cd \server-wa
+    ```
+4.  Inisialisasi proyek dan install library yang dibutuhkan:
+    ```bash
+    npm init -y
+    npm install whatsapp-web.js express express-validator qrcode-terminal cors
+    ```
+5.  Install **PM2** (Manajer Proses) secara global:
+    ```bash
+    npm install pm2 -g
+    ```
+
+-----
+
+### **3. Setup Ngrok (Akses Publik)**
+
+Agar server bisa diakses dari internet (Dashboard/Netlify).
+
+1.  Download **Ngrok** (Windows 64-bit).
+2.  **PENTING:** Copy file **`ngrok.exe`** dan Paste ke dalam folder `C:\server-wa`.
+3.  Daftarkan Token Akun (Ambil token dari Dashboard Ngrok):
+    ```bash
+    ngrok config add-authtoken TOKEN_PANJANG_KAMU_DISINI
+    ```
+4.  Buat file baru bernama **`start-ngrok.bat`** di dalam folder `server-wa`.
+5.  Isi file `.bat` tersebut dengan kode berikut (Sesuaikan dengan domain statis Ngrok kamu):
+    ```batch
+    @echo off
+    C:\server-wa\ngrok.exe http --domain=weariful-kandi-honourless.ngrok-free.dev 3000
+    ```
+    *(Ganti domain di atas dengan domain yang ada di dashboard Ngrok kamu)*.
+
+-----
+
+### **4. Membuat Kode Server (`index.js`)**
+
+Buat file baru bernama **`index.js`** di dalam folder `server-wa`, lalu isi dengan kode berikut (Mendukung Multi-Device):
+
+```javascript
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const qrcode = require('qrcode-terminal');
+const cors = require('cors');
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Konfigurasi Keamanan
+const KATA_SANDI_RAHASIA = "RAHASIA-SANGAT-AMAN-123";
+
+// Penyimpanan Sesi
+const sessions = {};
+const statusLog = {};
+
+// Fungsi Pembuat Robot (Multi-Device)
+const buatClient = (id, namaBisnis) => {
+    console.log(`[INIT] Menyiapkan robot: ${namaBisnis}...`);
+    statusLog[id] = "Sedang Menyiapkan...";
+
+    const client = new Client({
+        authStrategy: new LocalAuth({ clientId: id }),
+        puppeteer: { args: ['--no-sandbox'] }
+    });
+
+    client.on('qr', (qr) => {
+        console.log(`\n[QR] Scan untuk ${namaBisnis} (${id})`);
+        qrcode.generate(qr, { small: true });
+        statusLog[id] = "Menunggu Scan QR";
+    });
+
+    client.on('ready', () => {
+        console.log(`\n[SIAP] ${namaBisnis} (${id}) Berhasil Login!`);
+        statusLog[id] = "Terhubung (Online)";
+    });
+
+    sessions[id] = client;
+    client.initialize();
+};
+
+// --- DAFTARKAN NOMOR DISINI ---
+buatClient('aqshamart', 'Aqsha Mart');
+buatClient('frost', 'Frost AC Service');
+
+// Middleware Cek Password
+const periksaKataSandi = (req, res, next) => {
+    const apiKey = req.header('x-api-key');
+    if (apiKey && apiKey === KATA_SANDI_RAHASIA) next();
+    else res.status(401).json({ status: "gagal", message: "Password API salah." });
+};
+
+// API Kirim Pesan
+app.post('/kirim-pesan', periksaKataSandi, [
+    body('sender').notEmpty(),
+    body('number').notEmpty(),
+    body('message').notEmpty(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const senderId = req.body.sender;
+    const number = req.body.number.endsWith('@c.us') ? req.body.number : req.body.number + '@c.us';
+    const message = req.body.message;
+
+    const client = sessions[senderId];
+
+    if (!client) {
+        return res.status(404).json({ status: "gagal", message: `Pengirim '${senderId}' tidak ditemukan.` });
+    }
+
+    try {
+        const isRegistered = await client.isRegisteredUser(number);
+        if (isRegistered) {
+            await client.sendMessage(number, message);
+            res.status(200).json({ status: "sukses", message: `Terkirim dari ${senderId}` });
+        } else {
+            res.status(400).json({ status: "gagal", message: "Nomor tujuan tidak terdaftar WA" });
+        }
+    } catch (err) {
+        res.status(500).json({ status: "error", message: "Gagal kirim pesan" });
+    }
+});
+
+app.listen(3000, () => {
+    console.log(`Server Multi-Device jalan di Port 3000`);
+});
+```
+
+-----
+
+### **5. Menjalankan Server dengan PM2**
+
+Agar server jalan 24 jam otomatis:
+
+1.  Hapus proses lama (jika ada):
+    ```bash
+    pm2 delete all
+    ```
+2.  Jalankan Otak Robot:
+    ```bash
+    pm2 start index.js --name "robot-wa"
+    ```
+3.  Jalankan Trowongan Ngrok:
+    ```bash
+    pm2 start start-ngrok.bat --name "trowongan-ngrok"
+    ```
+4.  Simpan konfigurasi:
+    ```bash
+    pm2 save
+    ```
+
+-----
+
+### **6. Cara Scan QR Code**
+
+1.  Buka Log PM2:
+    ```bash
+    pm2 log robot-wa
+    ```
+2.  Akan muncul QR Code di layar hitam.
+3.  Scan menggunakan HP (Sesuai nama bisnis yang muncul di layar).
+4.  Tekan `Ctrl + C` untuk keluar dari log (Server tetap jalan).
+
+-----
+
+### **7. Cara Menggunakan API (Postman)**
+
+Gunakan **Aplikasi Postman Desktop** (jangan Browser) agar tidak error local network.
+
+  * **Method:** `POST`
+  * **URL:** `https://weariful-kandi-honourless.ngrok-free.dev/kirim-pesan` (Gunakan domain Ngrok kamu).
+  * **Headers:**
+      * Key: `x-api-key`
+      * Value: `RAHASIA-SANGAT-AMAN-123`
+  * **Body (Raw JSON):**
+    ```json
+    {
+      "sender": "aqshamart",
+      "number": "6281234567890",
+      "message": "Halo, ini tes pesan dari server!"
+    }
+    ```
+    *(Ganti `sender` menjadi "frost" jika ingin mengirim dari nomor kedua).*

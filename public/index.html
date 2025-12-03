@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Gateway Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --secondary: #075E54;
+            --accent: #34B7F1;
+            --bg-main: #0a1628;
+            --bg-card: #1a2942;
+            --bg-hover: #243b5e;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --border: #2d3f5f;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--success);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-badge i {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .main {
+            padding: 2rem 0;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            padding: 0.75rem 1rem;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #1faa52;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* Sessions Grid */
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .session-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .session-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .session-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .session-id {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .session-status {
+            padding: 0.375rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .status-connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .status-qr {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .status-init {
+            background: rgba(52, 183, 241, 0.2);
+            color: var(--accent);
+        }
+
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .session-phone {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background: var(--bg-main);
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .qr-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 1rem auto;
+        }
+
+        #qrcodeContainer {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--accent); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .toast {
+                right: 1rem;
+                left: 1rem;
+                min-width: auto;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--text-secondary);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WA Gateway</span>
+                </div>
+                <div class="status-badge">
+                    <i class="fas fa-circle"></i>
+                    <span>Server Online</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Add New Session -->
+            <section class="section">
+                <div class="card">
+                    <h2 class="section-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Tambah Sesi Baru
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Session ID</label>
+                            <input type="text" class="form-input" id="newSessionId" placeholder="toko1" pattern="[a-zA-Z0-9_-]+">
+                            <span class="form-hint">Tanpa spasi! Contoh: toko1, bisnis_a</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nama Sesi</label>
+                            <input type="text" class="form-input" id="newSessionName" placeholder="Toko Saya">
+                            <span class="form-hint">Boleh pakai spasi</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="opacity: 0;">Aksi</label>
+                            <button class="btn btn-primary" onclick="createSession()">
+                                <i class="fas fa-plus"></i>
+                                Buat Sesi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Sessions -->
+            <section class="section">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 class="section-title" style="margin: 0;">
+                            <i class="fas fa-mobile-alt"></i>
+                            Sesi Aktif
+                        </h2>
+                        <button class="btn btn-sm btn-primary" onclick="loadSessions()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="sessionsList" class="sessions-grid">
+                        <div class="empty-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Memuat data sesi...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Send Message -->
+            <section class="section">
+                <div class="card">
+                    <h2 class="section-title">
+                        <i class="fas fa-paper-plane"></i>
+                        Kirim Pesan
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Pilih Sesi</label>
+                            <select class="form-input" id="sendSessionId">
+                                <option value="">Pilih Sesi</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor Tujuan</label>
+                            <input type="text" class="form-input" id="sendNumber" placeholder="628123456789">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pesan</label>
+                            <input type="text" class="form-input" id="sendMessage" placeholder="Halo dari WA Gateway">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="opacity: 0;">Aksi</label>
+                            <button class="btn btn-primary" onclick="sendMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                                Kirim
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Documentation -->
+            <section class="section">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 class="section-title" style="margin: 0;">
+                            <i class="fas fa-code"></i>
+                            Dokumentasi API
+                        </h2>
+                        <button class="btn btn-sm btn-primary" onclick="toggleApiDocs()">
+                            <i class="fas fa-chevron-down" id="apiDocsIcon"></i>
+                            <span id="apiDocsText">Lihat</span>
+                        </button>
+                    </div>
+                    <div id="apiDocsContent" style="display: none;">
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-info-circle"></i> Base URL
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--primary);">
+                                <code style="color: var(--text-primary);">http://localhost:3000</code>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-key"></i> Authentication
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--warning);">
+                                <p style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+                                    Semua request harus menyertakan header:
+                                </p>
+                                <code style="color: var(--text-primary);">x-api-key: Centro212</code>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-paper-plane"></i> Kirim Pesan
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span style="background: var(--success); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">POST</span>
+                                    <code style="margin-left: 0.5rem; color: var(--text-primary);">/api/send</code>
+                                </p>
+                                <pre style="background: #0d1117; padding: 1rem; border-radius: 6px; overflow-x: auto; margin-top: 0.75rem;"><code style="color: #c9d1d9; font-size: 0.875rem;">{
+  "sessionId": "toko1",
+  "number": "628123456789",
+  "message": "Halo dari WA Gateway!"
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-list"></i> Lihat Semua Sesi
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">GET</span>
+                                    <code style="margin-left: 0.5rem; color: var(--text-primary);">/api/sessions</code>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-qrcode"></i> Ambil QR Code
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">GET</span>
+                                    <code style="margin-left: 0.5rem; color: var(--text-primary);">/api/qr/:sessionId</code>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-plus-circle"></i> Buat Sesi Baru
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span style="background: var(--success); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">POST</span>
+                                    <code style="margin-left: 0.5rem; color: var(--text-primary);">/api/session/create</code>
+                                </p>
+                                <pre style="background: #0d1117; padding: 1rem; border-radius: 6px; overflow-x: auto; margin-top: 0.75rem;"><code style="color: #c9d1d9; font-size: 0.875rem;">{
+  "sessionId": "toko2",
+  "sessionName": "Toko Cabang 2"
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-trash"></i> Hapus Sesi
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span style="background: var(--danger); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">DELETE</span>
+                                    <code style="margin-left: 0.5rem; color: var(--text-primary);">/api/session/:sessionId</code>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--primary);">
+                                <i class="fas fa-history"></i> Lihat Log Pesan
+                            </h3>
+                            <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px;">
+                                <p style="margin-bottom: 0.5rem;">
+                                    <span style="background: var(--accent); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">GET</span>
+                                    <code style="margin-left: 0.5rem; color: var(--text-primary);">/api/logs?limit=50</code>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-main); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--primary);">
+                            <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--primary);">
+                                <i class="fas fa-terminal"></i> Contoh cURL
+                            </h3>
+                            <pre style="background: #0d1117; padding: 1rem; border-radius: 6px; overflow-x: auto;"><code style="color: #c9d1d9; font-size: 0.875rem;">curl -X POST http://localhost:3000/api/send \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: Centro212" \
+  -d '{
+    "sessionId": "toko1",
+    "number": "628123456789",
+    "message": "Halo dari WA Gateway"
+  }'</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- QR Modal -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Scan QR Code</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="text-align: center;">
+                <div class="qr-container">
+                    <div id="qrcodeContainer"></div>
+                </div>
+                <p style="color: var(--text-secondary); margin-top: 1rem;">
+                    Scan dengan WhatsApp di HP kamu
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
